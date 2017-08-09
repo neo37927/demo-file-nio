@@ -2,8 +2,11 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.Date;
 
 /**
@@ -19,19 +22,19 @@ public class CommonFileTest {
 
         };
         try {
-            for (int i = 0; i <= FILE_PATH_ARRAY.length; i++) {
-                Long beginNanoTimeUtil = System.nanoTime();
-                getStringByCommonUtils(FILE_PATH);
-                System.out.println(System.nanoTime() - beginNanoTimeUtil);
+            for (int i = 0; i < FILE_PATH_ARRAY.length; i++) {
+                /*Long beginNanoTimeUtil = System.nanoTime();
+                getStringByCommonUtils(FILE_PATH_ARRAY[i]);
+                System.out.println(System.nanoTime() - beginNanoTimeUtil);*/
 
                 Long beginNanoTimeNIO = System.nanoTime();
-                getStringByNIO(FILE_PATH);
+                getStringByNIO(FILE_PATH_ARRAY[i]);
                 System.out.println(System.nanoTime() - beginNanoTimeNIO);
 
 
-                Long beginNanoTimeIO = System.nanoTime();
-                readFile(FILE_PATH);
-                System.out.println(System.nanoTime() - beginNanoTimeIO);
+                /*Long beginNanoTimeIO = System.nanoTime();
+                readFile(FILE_PATH_ARRAY[i]);
+                System.out.println(System.nanoTime() - beginNanoTimeIO);*/
 
                 System.out.println("______________________________");
             }
@@ -49,12 +52,21 @@ public class CommonFileTest {
     private static String getStringByNIO(String fileName) throws IOException {
         StringBuilder builder = new StringBuilder();
         int i = 1;
+        File file = new File(fileName);
         // 获取源文件和目标文件的输入输出流
-        FileInputStream in = new FileInputStream(fileName);
+        FileInputStream in = new FileInputStream(file);
         // 获取输入输出通道
         FileChannel fcIn = in.getChannel();
 //        ByteBuffer buffer = MappedByteBuffer.allocate(1024 * 4);
         ByteBuffer buffer = ByteBuffer.allocate(1024 * 4);
+        /*MappedByteBuffer  buffer =fcIn.map(FileChannel.MapMode.READ_ONLY, 0, file.length());
+        //使用UTF_8字符集来创建解码器
+        Charset charset=Charset.forName("UTF-8");
+        //创建解码器（CharsetDecoder）对象
+        CharsetDecoder decoder=charset.newDecoder();
+        //使用解码器将ByteBuffer转换成CharBuffer
+        CharBuffer charBuffer=decoder.decode(buffer);
+        return builder.append(charBuffer).toString();*/
         while (true) {
             // clear方法重设缓冲区，使它可以接受读入的数据
             buffer.clear();
@@ -67,7 +79,7 @@ public class CommonFileTest {
             // flip方法让缓冲区可以将新读入的数据写入另一个通道
             buffer.flip();
             i++;
-            builder.append(buffer);
+            builder.append(byteBufferToString(buffer));
         }
     }
 
@@ -93,6 +105,20 @@ public class CommonFileTest {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public static String byteBufferToString(ByteBuffer buffer) {
+        CharBuffer charBuffer = null;
+        try {
+            Charset charset = Charset.forName("UTF-8");
+//            CharsetDecoder decoder = charset.newDecoder();
+//            charBuffer = decoder.decode(buffer);
+            charBuffer = charset.decode(buffer);
+            return charBuffer.toString();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
         }
     }
 }
